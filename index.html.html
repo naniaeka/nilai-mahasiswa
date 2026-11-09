@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sistem Pengelolaan Nilai Mahasiswa</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f4f7;--card:#fff;--ink:#1b2740;--mute:#5d6a82;--line:#d9dee7;--acc:#0f6b66;--acc-t:#fff;--bad:#b42318;--bad-bg:#fde8e6;--ok:#146c43;--ok-bg:#e1f4ea;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1624;--card:#18223a;--ink:#e8ecf5;--mute:#9aa7c2;--line:#2b3957;--acc:#4fc3bb;--acc-t:#0b1a19;--bad:#ff8f84;--bad-bg:#3a1c1c;--ok:#6fdca0;--ok-bg:#12301f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1624;--card:#18223a;--ink:#e8ecf5;--mute:#9aa7c2;--line:#2b3957;--acc:#4fc3bb;--acc-t:#0b1a19;--bad:#ff8f84;--bad-bg:#3a1c1c;--ok:#6fdca0;--ok-bg:#12301f;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1000px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:24px;margin:0 0 4px;font-weight:600}
+h2{font-size:16px;margin:0 0 12px;font-weight:600}
+.sub{color:var(--mute);margin:0 0 20px}
+.grid{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start}
+@media(max-width:800px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px}
+label{display:block;font-weight:500;margin:10px 0 4px}
+input{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
+input:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+input.err{border-color:var(--bad)}
+.row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.row label{margin-top:10px}
+.hint{color:var(--mute);font-size:13px;margin:6px 0 0}
+.msg{margin:12px 0 0;padding:8px 10px;border-radius:6px;font-size:14px;display:none}
+.msg.show{display:block}.msg.bad{background:var(--bad-bg);color:var(--bad)}.msg.ok{background:var(--ok-bg);color:var(--ok)}
+.msg ul{margin:0;padding-left:18px}
+.btns{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+button{font:inherit;padding:8px 14px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button.pri{background:var(--acc);color:var(--acc-t);border-color:var(--acc);font-weight:500}
+button.sm{padding:3px 9px;font-size:13px}
+button.del{color:var(--bad)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:16px}
+.stat{border:1px solid var(--line);border-radius:6px;padding:8px 10px;background:var(--card)}
+.stat b{display:block;font-size:20px;font-weight:600}.stat span{color:var(--mute);font-size:13px}
+.bar{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}.bar span{border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:13px;color:var(--mute)}
+.tools{display:flex;gap:8px;margin-bottom:10px}
+.wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:620px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-weight:600;color:var(--mute);font-size:13px}
+td.n{text-align:right}th.n{text-align:right}
+.tag{display:inline-block;padding:1px 8px;border-radius:4px;font-size:13px;font-weight:500}
+.tag.ok{background:var(--ok-bg);color:var(--ok)}.tag.bad{background:var(--bad-bg);color:var(--bad)}
+.empty{padding:24px 0;text-align:center;color:var(--mute)}
+</style>
+</head>
+<body>
+<main>
+<h1>Sistem Pengelolaan Nilai Mahasiswa</h1>
+<p class="sub">Input nilai, hitung nilai akhir otomatis, dan lihat rekapitulasi hasil. Nilai akhir = 30% Tugas + 30% UTS + 40% UAS. Lulus jika nilai akhir minimal 55.</p>
+<div class="grid">
+  <section class="card" aria-labelledby="ft">
+    <h2 id="ft">Input nilai</h2>
+    <form id="f" novalidate>
+      <label for="nim">NIM</label>
+      <input id="nim" inputmode="numeric" autocomplete="off" placeholder="contoh: 20230001">
+      <p class="hint">Angka saja, 8 sampai 12 digit.</p>
+      <label for="nama">Nama lengkap</label>
+      <input id="nama" autocomplete="off" placeholder="contoh: Siti Rahma">
+      <div class="row">
+        <div><label for="tugas">Tugas</label><input id="tugas" inputmode="decimal" placeholder="0-100"></div>
+        <div><label for="uts">UTS</label><input id="uts" inputmode="decimal" placeholder="0-100"></div>
+        <div><label for="uas">UAS</label><input id="uas" inputmode="decimal" placeholder="0-100"></div>
+      </div>
+      <div id="msg" class="msg" role="alert" aria-live="polite"></div>
+      <div class="btns">
+        <button type="submit" class="pri" id="save">Simpan nilai</button>
+        <button type="button" id="reset">Kosongkan form</button>
+      </div>
+    </form>
+    <p class="hint" style="margin-top:14px">Data tersimpan di browser (localStorage).</p>
+    <div class="btns"><button type="button" class="sm" id="seed">Isi data contoh</button><button type="button" class="sm del" id="clear">Hapus semua data</button></div>
+  </section>
+
+  <section class="card" aria-labelledby="rt">
+    <h2 id="rt">Rekapitulasi hasil</h2>
+    <div class="stats" id="stats"></div>
+    <div class="bar" id="dist"></div>
+    <div class="tools"><input id="q" type="search" placeholder="Cari NIM atau nama" aria-label="Cari mahasiswa"></div>
+    <div class="wrap"><table>
+      <thead><tr><th>NIM</th><th>Nama</th><th class="n">Tugas</th><th class="n">UTS</th><th class="n">UAS</th><th class="n">Akhir</th><th>Huruf</th><th>Status</th><th>Aksi</th></tr></thead>
+      <tbody id="tb"></tbody>
+    </table></div>
+  </section>
+</div>
+</main>
+<script>
+var KEY="nilai_mhs_v1", data=[], editNim=null;
+var $=function(id){return document.getElementById(id)};
+function load(){try{var r=localStorage.getItem(KEY);data=r?JSON.parse(r):[];if(!Array.isArray(data))data=[]}catch(e){data=[]}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(data));return true}catch(e){show("bad",["Data gagal disimpan ke penyimpanan browser."]);return false}}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function akhir(t,u,a){return Math.round((t*0.3+u*0.3+a*0.4)*100)/100}
+function huruf(n){return n>=85?"A":n>=70?"B":n>=55?"C":n>=40?"D":"E"}
+function lulus(n){return n>=55}
+function parseNilai(v){v=v.trim().replace(",",".");if(v===""||!/^\d+(\.\d+)?$/.test(v))return NaN;return parseFloat(v)}
+function show(type,list){var m=$("msg");m.className="msg show "+type;m.innerHTML=list.length>1?"<ul>"+list.map(function(x){return "<li>"+esc(x)+"</li>"}).join("")+"</ul>":esc(list[0])}
+function hide(){$("msg").className="msg"}
+function validate(){
+  var errs=[],bad=[],nim=$("nim").value.trim(),nama=$("nama").value.trim().replace(/\s+/g," ");
+  if(!nim){errs.push("NIM wajib diisi.");bad.push("nim")}
+  else if(!/^\d{8,12}$/.test(nim)){errs.push("NIM harus berupa angka 8 sampai 12 digit.");bad.push("nim")}
+  else if(nim!==editNim&&data.some(function(d){return d.nim===nim})){errs.push("NIM "+nim+" sudah terdaftar. Gunakan tombol Ubah untuk mengedit.");bad.push("nim")}
+  if(!nama){errs.push("Nama wajib diisi.");bad.push("nama")}
+  else if(nama.length>50||!/^[\p{L} .'\u2019\-]+$/u.test(nama)){errs.push("Nama hanya boleh huruf, spasi, titik, apostrof, atau tanda hubung (maksimal 50 karakter).");bad.push("nama")}
+  var v={};
+  [["tugas","Tugas"],["uts","UTS"],["uas","UAS"]].forEach(function(p){
+    var raw=$(p[0]).value, n=parseNilai(raw);
+    if(raw.trim()===""){errs.push("Nilai "+p[1]+" wajib diisi.");bad.push(p[0])}
+    else if(isNaN(n)){errs.push("Nilai "+p[1]+" harus berupa angka.");bad.push(p[0])}
+    else if(n<0||n>100){errs.push("Nilai "+p[1]+" harus antara 0 dan 100.");bad.push(p[0])}
+    else v[p[0]]=n;
+  });
+  ["nim","nama","tugas","uts","uas"].forEach(function(id){$(id).classList.toggle("err",bad.indexOf(id)>-1)});
+  return {errs:errs,nim:nim,nama:nama,v:v};
+}
+function resetForm(){$("f").reset();editNim=null;$("save").textContent="Simpan nilai";$("nim").disabled=false;["nim","nama","tugas","uts","uas"].forEach(function(i){$(i).classList.remove("err")})}
+$("f").addEventListener("submit",function(e){
+  e.preventDefault();var r=validate();
+  if(r.errs.length){show("bad",r.errs);return}
+  var rec={nim:r.nim,nama:r.nama,tugas:r.v.tugas,uts:r.v.uts,uas:r.v.uas};
+  if(editNim){data=data.map(function(d){return d.nim===editNim?rec:d});show("ok",["Nilai "+rec.nama+" berhasil diperbarui."])}
+  else{data.push(rec);show("ok",["Nilai "+rec.nama+" berhasil disimpan. Nilai akhir: "+akhir(rec.tugas,rec.uts,rec.uas)+" ("+huruf(akhir(rec.tugas,rec.uts,rec.uas))+")."])}
+  if(persist()){var m=$("msg").className,h=$("msg").innerHTML;resetForm();$("msg").className=m;$("msg").innerHTML=h;render()}
+});
+$("reset").onclick=function(){resetForm();hide()};
+$("q").oninput=render;
+$("seed").onclick=function(){
+  var s=[["20230001","Siti Rahma",90,85,88],["20230002","Budi Santoso",70,65,72],["20230003","Dewi Lestari",50,45,40],["20230004","Agus Pratama",80,78,82],["20230005","Rina Wulandari",100,95,98]];
+  var n=0;s.forEach(function(x){if(!data.some(function(d){return d.nim===x[0]})){data.push({nim:x[0],nama:x[1],tugas:x[2],uts:x[3],uas:x[4]});n++}});
+  if(persist()){show("ok",[n+" data contoh ditambahkan."]);render()}
+};
+$("clear").onclick=function(){
+  if(!data.length){show("bad",["Tidak ada data untuk dihapus."]);return}
+  if(confirm("Hapus semua data nilai? Tindakan ini tidak dapat dibatalkan.")){data=[];persist();resetForm();show("ok",["Semua data dihapus."]);render()}
+};
+function edit(nim){var d=data.filter(function(x){return x.nim===nim})[0];if(!d)return;editNim=nim;$("nim").value=d.nim;$("nim").disabled=true;$("nama").value=d.nama;$("tugas").value=d.tugas;$("uts").value=d.uts;$("uas").value=d.uas;$("save").textContent="Perbarui nilai";show("ok",["Mengubah data "+d.nama+". NIM tidak dapat diubah."]);$("nama").focus()}
+function del(nim){var d=data.filter(function(x){return x.nim===nim})[0];if(!d)return;if(confirm("Hapus data "+d.nama+" ("+nim+")?")){data=data.filter(function(x){return x.nim!==nim});if(persist()){if(editNim===nim)resetForm();show("ok",["Data "+d.nama+" dihapus."]);render()}}}
+function render(){
+  var q=$("q").value.trim().toLowerCase();
+  var rows=data.map(function(d){var a=akhir(d.tugas,d.uts,d.uas);return {d:d,a:a,h:huruf(a),l:lulus(a)}});
+  var f=rows.filter(function(r){return !q||r.d.nim.indexOf(q)>-1||r.d.nama.toLowerCase().indexOf(q)>-1});
+  $("tb").innerHTML=f.length?f.map(function(r){return "<tr><td>"+esc(r.d.nim)+"</td><td>"+esc(r.d.nama)+"</td><td class=n>"+r.d.tugas+"</td><td class=n>"+r.d.uts+"</td><td class=n>"+r.d.uas+"</td><td class=n><b>"+r.a+"</b></td><td>"+r.h+"</td><td><span class='tag "+(r.l?"ok":"bad")+"'>"+(r.l?"Lulus":"Tidak lulus")+"</span></td><td><button class='sm' data-e='"+esc(r.d.nim)+"'>Ubah</button> <button class='sm del' data-d='"+esc(r.d.nim)+"'>Hapus</button></td></tr>"}).join(""):"<tr><td colspan=9 class=empty>"+(data.length?"Tidak ada data yang cocok dengan pencarian.":"Belum ada data. Isi form di samping atau klik Isi data contoh.")+"</td></tr>";
+  var n=rows.length,sum=0,mx=null,mn=null,lc=0,g={A:0,B:0,C:0,D:0,E:0};
+  rows.forEach(function(r){sum+=r.a;if(mx===null||r.a>mx)mx=r.a;if(mn===null||r.a<mn)mn=r.a;if(r.l)lc++;g[r.h]++});
+  var st=[["Jumlah mahasiswa",n],["Rata-rata",n?(Math.round(sum/n*100)/100):"-"],["Tertinggi",n?mx:"-"],["Terendah",n?mn:"-"],["Lulus",lc],["Tidak lulus",n-lc]];
+  $("stats").innerHTML=st.map(function(s){return "<div class=stat><b>"+s[1]+"</b><span>"+s[0]+"</span></div>"}).join("");
+  $("dist").innerHTML=Object.keys(g).map(function(k){return "<span>Huruf "+k+": "+g[k]+"</span>"}).join("");
+}
+$("tb").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;if(b.dataset.e)edit(b.dataset.e);if(b.dataset.d)del(b.dataset.d)});
+load();render();
+</script>
+</body>
+</html>
